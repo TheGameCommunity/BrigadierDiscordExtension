@@ -1,4 +1,4 @@
-package com.gamebuster19901.brigadier.command.argument;
+package com.gamebuster19901.discord.command.argument;
 
 import java.util.function.Predicate;
 
