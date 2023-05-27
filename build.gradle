@@ -18,6 +18,10 @@ repositories {
 sourceCompatibility = 19
 targetCompatibility = 19
 
+version = "0.1.0.0"
+group = "com.thegamecommunity"
+archivesBaseName = "discordBrigadierExtension"
+
 dependencies {
    implementation group: 'com.thegamecommunity', name:'brigadier', version: 'TGC-1.3.0.0'
    shadow group: 'com.thegamecommunity', name:'brigadier', version: 'TGC-1.3.0.0'
