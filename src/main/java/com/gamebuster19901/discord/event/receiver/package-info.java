@@ -1,1 +1,0 @@
-package com.gamebuster19901.discord.event.receiver;

@@ -1,0 +1,1 @@
+package com.thegamecommunity.brigadier.command.argument;

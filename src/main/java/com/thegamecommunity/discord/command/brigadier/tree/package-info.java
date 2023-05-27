@@ -1,0 +1,1 @@
+package com.thegamecommunity.discord.command.brigadier.tree;
