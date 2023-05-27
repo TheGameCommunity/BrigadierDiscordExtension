@@ -11,10 +11,12 @@ import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionE
 import net.dv8tion.jda.api.interactions.components.Component.Type;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 
-public class DiscordDispatcher extends Dispatcher<DiscordContext> {
+public abstract class DiscordDispatcher<S extends DiscordContext> extends Dispatcher<S> {
 
+	public abstract S newContext(Object o);
+	
 	public int execute(ButtonInteractionEvent e) throws CommandSyntaxException {
-		return this.execute(e.getComponentId(), new DiscordContext<ButtonInteractionEvent>(e));
+		return this.execute(e.getComponentId(), newContext(e));
 	}
 
 	public int execute(ModalInteractionEvent e) throws CommandSyntaxException {
@@ -33,7 +35,7 @@ public class DiscordDispatcher extends Dispatcher<DiscordContext> {
 			}
 		}
 		System.out.println(command);
-		return execute(command.toString(), new DiscordContext<ModalInteractionEvent>(e));
+		return execute(command.toString(), newContext(e));
 	}
 
 	public int execute(StringSelectInteractionEvent e) throws CommandSyntaxException {
@@ -41,7 +43,7 @@ public class DiscordDispatcher extends Dispatcher<DiscordContext> {
 		command.append(e.getSelectMenu().getId());
 		command.append(' ');
 		command.append(e.getValues().get(0));
-		return execute(command.toString(), new DiscordContext<StringSelectInteractionEvent>(e));
+		return execute(command.toString(), newContext(e));
 	}
 
 }

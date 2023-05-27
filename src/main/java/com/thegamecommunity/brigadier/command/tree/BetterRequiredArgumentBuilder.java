@@ -31,6 +31,10 @@ public class BetterRequiredArgumentBuilder<S, T> extends BetterArgumentBuilder<S
         return new BetterRequiredArgumentBuilder<>(name, type);
     }
     
+    public static <S, T> BetterRequiredArgumentBuilder<S, T> argument(final String name, final ArgumentType<T> type, String description, String help) {
+        return new BetterRequiredArgumentBuilder<>(name, type, description, help);
+    }
+    
 	public String getName() {
 		return name;
 	}

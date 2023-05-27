@@ -3,15 +3,13 @@ package com.thegamecommunity.discord.command.brigadier.tree;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.mojang.brigadier.tree.CommandNode;
 import com.thegamecommunity.brigadier.command.tree.BaseCommandNodeBuilder;
 import com.thegamecommunity.brigadier.command.tree.BaseNodeBuilder;
-import com.thegamecommunity.brigadier.command.tree.BetterArgumentBuilder;
 import com.thegamecommunity.discord.command.DiscordContext;
 
 import net.dv8tion.jda.api.Permission;
 
-public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends BetterArgumentBuilder<S, DiscordBaseCommandNodeBuilder<S>> implements BaseNodeBuilder<S, DiscordBaseCommandNodeBuilder<S>> {
+public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends BaseCommandNodeBuilder<S> implements BaseNodeBuilder<S, BaseCommandNodeBuilder<S>> {
 	
 	private final String name;
 	
@@ -20,13 +18,18 @@ public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends Bet
 	}
 	
 	public DiscordBaseCommandNodeBuilder(String name, String description, String help) {
+		super(name, description, help);
 		this.name = name;
 		setDescription(description);
 		setHelp(help);
 	}
 	
+	public DiscordBaseCommandNodeBuilder<S> requires(Predicate<S> requirement, String message) {
+		getFailActions().put(requirement, (context) -> context.queueMessage(message));
+		return getThis();
+	}
+	
 	@Override
-	@SuppressWarnings("unchecked")
 	public DiscordBaseCommandNodeBuilder<S> requires(Predicate<S> requirement) { 
 		getFailActions().put(requirement, (context) -> context.queueMessage("You are unable to execute this command - No reason specified."));
 		return getThis();
@@ -42,12 +45,12 @@ public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends Bet
 		return getThis();
 	}
 	
-    public static <S> BaseCommandNodeBuilder<S> base(final String name) {
-        return new BaseCommandNodeBuilder<>(name);
+    public static <S extends DiscordContext> DiscordBaseCommandNodeBuilder<S> discord(final String name) {
+        return new DiscordBaseCommandNodeBuilder<>(name);
     }
     
-    public static <S> BaseCommandNodeBuilder<S> base(final String name, final String description, final String help) {
-    	return new BaseCommandNodeBuilder<>(name, description, help);
+    public static <S extends DiscordContext> DiscordBaseCommandNodeBuilder<S> discord(final String name, final String description, final String help) {
+    	return new DiscordBaseCommandNodeBuilder<>(name, description, help);
     }
     
     public String getName() {
@@ -55,15 +58,13 @@ public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends Bet
     }
 
 	@Override
-	protected DiscordBaseCommandNodeBuilder<S> getThis() {
-		// TODO Auto-generated method stub
-		return null;
+	public DiscordBaseCommandNodeBuilder<S> getThis() {
+		return this;
 	}
 
 	@Override
-	public CommandNode<S> build() {
-		// TODO Auto-generated method stub
-		return null;
+	public BaseCommandNode<S> build() {
+		return new BaseCommandNode<S>(getName(), getDescription(), getHelp(), getFailActions(), getCommand(), getRequirement(), getRedirect(), getRedirectModifier(), isFork());
 	}
 	
 }
