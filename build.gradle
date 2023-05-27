@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'com.github.johnrengelman.shadow' version "8.1.1"
+    id 'maven-publish'
 }
 
 repositories {
@@ -55,4 +56,15 @@ jar {
 	} {
 		exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
 	}
+}
+
+publishing {
+  publications {
+    shadow(MavenPublication) { publication ->
+      project.shadow.component(publication)
+    }
+  }
+  repositories {
+    mavenLocal()
+  }
 }
