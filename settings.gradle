@@ -9,4 +9,8 @@
  */
 
 rootProject.name = 'BrigadierDiscordExtension'
-include('lib')
+sourceControl {
+	gitRepository('https://github.com/TheGameCommunity/brigadier.git') {
+		producesModule('com.thegamecommunity:brigadier')
+	}
+}

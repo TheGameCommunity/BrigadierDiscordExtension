@@ -1,5 +1,35 @@
-# Ignore Gradle project-specific cache directory
+# eclipse
+bin
+*.launch
+.metadata
+.classpath
+.project
+/.settings
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
 .gradle
 
-# Ignore Gradle build output directory
-build
+#JVM
+hs_err_pid*.log
+
+#Run
+/dev
+/run
+/backups
+/.archive
+# secrets
+**.secret
+
+#ModLauncher
+logs/*
+
+#Built Jar
+ExciteBot*.jar

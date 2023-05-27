@@ -1,0 +1,54 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'com.github.johnrengelman.shadow' version "8.1.1"
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+	maven {
+		url 'https://m2.dv8tion.net/releases'
+	}
+	maven {
+		url "https://repo.spongepowered.org/maven/"
+	}
+}
+
+sourceCompatibility = 19
+targetCompatibility = 19
+
+dependencies {
+   implementation group: 'com.thegamecommunity', name:'brigadier', version: 'TGC-1.3.0.0'
+   shadow group: 'com.thegamecommunity', name:'brigadier', version: 'TGC-1.3.0.0'
+   shadow ('net.dv8tion:JDA:5.0.0-beta.9')
+   implementation ('net.dv8tion:JDA:5.0.0-beta.9')
+}
+
+shadowJar {
+	mergeServiceFiles()
+	configurations = [project.configurations.shadow]
+	exclude 'META-INF/LICENSE'
+	exclude 'META-INF/LICENSE.txt'
+	exclude 'META-INF/LICENSsE.txt'
+	exclude 'META-INF/NOTICE'
+	exclude 'META-INF/NOTICE.txt'
+	exclude 'META-INF/DEPENDENCIES'
+	exclude 'LICENSE.txt'
+}
+
+jar {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	manifest {
+		attributes(
+			'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' '),
+			'Specification-Version': 8.0,
+			'Multi-Release': 'true'
+		)
+	}
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	} {
+		exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+	}
+}
