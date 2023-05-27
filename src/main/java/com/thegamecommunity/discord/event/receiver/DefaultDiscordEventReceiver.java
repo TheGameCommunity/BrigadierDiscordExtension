@@ -31,7 +31,7 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 	private static final boolean debug = true;
 	
 	private final Sub sub = new Sub();
-	private final DiscordDispatcher dispatcher;
+	private final DiscordDispatcher<DiscordContext> dispatcher;
 	
 	public DefaultDiscordEventReceiver(DiscordDispatcher dispatcher) {
 		this.dispatcher = dispatcher;
@@ -107,7 +107,7 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 				}
 				SlashCommandData data = net.dv8tion.jda.api.interactions.commands.build.Commands.slash(command.getName(), command.getUsageText());
 				
-				Command<DiscordContext> base = command.getCommand();
+				Command<DiscordContext> base = (Command<DiscordContext>) command.getCommand();
 				
 				if(command.getChildren().size() > 0) {
 					if(command.getChildren().size() == 1) {
