@@ -19,7 +19,7 @@ repositories {
 sourceCompatibility = 19
 targetCompatibility = 19
 
-version = "0.3.0.0"
+version = "0.3.1.0"
 group = "com.thegamecommunity"
 archivesBaseName = "discordBrigadierExtension"
 
