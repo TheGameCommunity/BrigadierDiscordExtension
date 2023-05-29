@@ -64,7 +64,17 @@ public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends Bas
 
 	@Override
 	public BaseCommandNode<S> build() {
-		return new BaseCommandNode<S>(getName(), getDescription(), getHelp(), getFailActions(), getCommand(), getRequirement(), getRedirect(), getRedirectModifier(), isFork());
+		
+		BaseCommandNode result = new BaseCommandNode<S>(getName(), getDescription(), getHelp(), getFailActions(), getCommand(), getRequirement(), getRedirect(), getRedirectModifier(), isFork());
+		
+    	for(final CommandNode<S> argument : getArguments()) {
+    		System.out.println("ARGUMENT: " + argument);
+    		result.addChild(argument);
+    	}
+    	
+    	return result;
+		
+		
 	}
 	
 }
