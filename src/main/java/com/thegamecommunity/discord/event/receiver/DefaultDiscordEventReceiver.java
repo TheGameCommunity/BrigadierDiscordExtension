@@ -44,56 +44,68 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 		sub.onEvent(ge);
 	}
 	
+	protected DiscordContext createContext(Object o) {
+		return new DiscordContext(o);
+	}
+	
 	protected class Sub extends ListenerAdapter {
 		@Override
 		public void onSlashCommandInteraction(SlashCommandInteractionEvent e) {
-			StringBuilder c = new StringBuilder(e.getName());
-			for(OptionMapping arg : e.getOptions()) {
-				c.append(' ');
-				c.append(arg.getAsString().trim());
-			}
-			DiscordContext context = new DiscordContext(e);
-			try {
-				dispatcher.execute(c.toString() , context);
-			} catch (Throwable t) {
-				if(t.getMessage() != null && !t.getMessage().isBlank()) {
-					context.sendThrowable(t);
+			CompletableFuture.runAsync(() -> {
+				StringBuilder c = new StringBuilder(e.getName());
+				for(OptionMapping arg : e.getOptions()) {
+					c.append(' ');
+					c.append(arg.getAsString().trim());
 				}
-				else {
-					context.sendThrowable(t);
+				DiscordContext context = createContext(e);
+				try {
+					dispatcher.execute(c.toString() , context);
+				} catch (Throwable t) {
+					if(t.getMessage() != null && !t.getMessage().isBlank()) {
+						context.sendThrowable(t);
+					}
+					else {
+						context.sendThrowable(t);
+					}
+					if(!(t instanceof CommandSyntaxException)) {
+						throw new RuntimeException(t);
+					}
 				}
-				if(!(t instanceof CommandSyntaxException)) {
-					throw new RuntimeException(t);
-				}
-			}
+			});
 		}
 		
 		
 		@Override
 		public void onButtonInteraction(ButtonInteractionEvent e) {
-			try {
-				dispatcher.execute(e);
-			} catch (CommandSyntaxException e1) {
-				e1.printStackTrace();
-			}
+			CompletableFuture.runAsync(() -> {
+				try {
+					dispatcher.execute(e);
+				} catch (CommandSyntaxException e1) {
+					e1.printStackTrace();
+				}
+			});
 		}
 		
 		@Override
 		public void onModalInteraction(ModalInteractionEvent e) {
-			try {
-				dispatcher.execute(e);
-			} catch (CommandSyntaxException e1) {
-				e1.printStackTrace();
-			}
+			CompletableFuture.runAsync(() -> {
+				try {
+					dispatcher.execute(e);
+				} catch (CommandSyntaxException e1) {
+					e1.printStackTrace();
+				}
+			});
 		}
 		
 		@Override
 		public void onStringSelectInteraction(StringSelectInteractionEvent e) {
-			try {
-				dispatcher.execute(e);
-			} catch (CommandSyntaxException e1) {
-				e1.printStackTrace();
-			}
+			CompletableFuture.runAsync(() -> {
+				try {
+					dispatcher.execute(e);
+				} catch (CommandSyntaxException e1) {
+					e1.printStackTrace();
+				}
+			});
 		}
 		
 		@Override
@@ -145,7 +157,7 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 				else {
 					fixedArguments = "";
 				}
-				ParseResults<DiscordContext> parseResults = dispatcher.parse(command, new DiscordContext<CommandAutoCompleteInteractionEvent>(e));
+				ParseResults<DiscordContext> parseResults = dispatcher.parse(command, createContext(e));
 				List<Suggestion> suggestions;
 				List<String> returnedSuggestions = new ArrayList<String>();
 				try {
