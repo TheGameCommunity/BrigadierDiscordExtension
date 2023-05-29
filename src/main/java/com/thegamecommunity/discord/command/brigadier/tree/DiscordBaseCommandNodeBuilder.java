@@ -25,6 +25,15 @@ public class DiscordBaseCommandNodeBuilder<S extends DiscordContext> extends Bas
 		setHelp(help);
 	}
 	
+	public DiscordBaseCommandNodeBuilder<S> botRequires(Permission... permissions) {
+		for(Permission permission : permissions) {
+			Predicate<S> requiredPerms = (context) -> context.getServer() != null ? context.getServer().getSelfMember().hasPermission(permission) : true;
+			Consumer<S> failAction = (context) -> context.queueMessage("I'm unable to execute this command - I do not have the `" + permission.getName() + "` permission.", true, false);
+			getFailActions().put(requiredPerms, failAction);
+		}
+		return getThis();
+	}
+	
 	public DiscordBaseCommandNodeBuilder<S> requires(Predicate<S> requirement, String message) {
 		getFailActions().put(requirement, (context) -> context.queueMessage(message));
 		return getThis();

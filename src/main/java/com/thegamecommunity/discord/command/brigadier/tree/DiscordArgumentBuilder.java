@@ -35,6 +35,15 @@ public class DiscordArgumentBuilder<S extends DiscordContext, T> extends BetterR
         return getThis();
     }
 	
+	public DiscordArgumentBuilder<S, T> botRequires(Permission... permissions) {
+		for(Permission permission : permissions) {
+			Predicate<S> requiredPerms = (context) -> context.getServer() != null ? context.getServer().getSelfMember().hasPermission(permission) : true;
+			Consumer<S> failAction = (context) -> context.queueMessage("I'm unable to execute this command - I do not have the `" + permission.getName() + "` permission.", true, false);
+			getFailActions().put(requiredPerms, failAction);
+		}
+		return getThis();
+	}
+	
 	@Override
 	public DiscordArgumentBuilder<S, T> requires(Predicate<S> requirement) { 
 		getFailActions().put(requirement, (context) -> context.queueMessage("You are unable to execute this command - No reason specified."));
