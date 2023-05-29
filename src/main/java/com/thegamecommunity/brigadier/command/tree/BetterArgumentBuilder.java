@@ -15,7 +15,7 @@ public abstract class BetterArgumentBuilder<S, T extends BetterArgumentBuilder<S
 		DescriptiveNodeBuilder<T>
 {
 
-	private SuggestionProvider<S> suggestionsProvider = null;
+	protected SuggestionProvider<S> suggestionsProvider = null;
 	private final LinkedHashMap<Predicate<S>, Consumer<S>> failActions = new LinkedHashMap<>();
 	private String description = null;
 	private String help = null;

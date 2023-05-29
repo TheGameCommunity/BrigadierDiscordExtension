@@ -56,6 +56,7 @@ public class BaseCommandNodeBuilder<S> extends BetterArgumentBuilder<S, BaseComm
     	BaseCommandNode<S> result = new BaseCommandNode<>(name, getDescription(), getHelp(), getFailActions(), getCommand(), getRequirement(), getRedirect(), getRedirectModifier(), isFork());
     	
     	for(final CommandNode<S> argument : getArguments()) {
+    		System.out.println("ARGUMENT: " + argument);
     		result.addChild(argument);
     	}
     	
@@ -67,7 +68,7 @@ public class BaseCommandNodeBuilder<S> extends BetterArgumentBuilder<S, BaseComm
     	return this;
     }
 	
-	public static class BaseCommandNode<S> extends CommandNode<S> implements BaseNode<S> {
+	public static class BaseCommandNode<S> extends CommandNode<S> implements BaseNode<S, BaseCommandNode<S>> {
 
 		private final String literal;
 		private final String literalLowerCase;
@@ -106,7 +107,7 @@ public class BaseCommandNodeBuilder<S> extends BetterArgumentBuilder<S, BaseComm
 		}
 
 		@Override
-		protected boolean isValidInput(S source, String input) {
+		public boolean isValidInput(S source, String input) {
 			return parse(new StringReader(input)) > -1;
 		}
 		
@@ -170,7 +171,7 @@ public class BaseCommandNodeBuilder<S> extends BetterArgumentBuilder<S, BaseComm
 		}
 
 		@Override
-		protected String getSortedKey() {
+		public String getSortedKey() {
 			return literal;
 		}
 
@@ -189,6 +190,11 @@ public class BaseCommandNodeBuilder<S> extends BetterArgumentBuilder<S, BaseComm
 			int result = literal.hashCode();
 			result = 31 * result + super.hashCode();
 			return result;
+		}
+
+		@Override
+		public String getLiteral() {
+			return literal;
 		}
 		
 	}

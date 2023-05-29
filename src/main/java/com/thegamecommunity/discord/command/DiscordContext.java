@@ -1,19 +1,27 @@
 package com.thegamecommunity.discord.command;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.thegamecommunity.brigadier.command.CommandContext;
 import com.thegamecommunity.discord.user.ConsoleUser;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.IPermissionHolder;
 import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.PermissionOverride;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.attribute.IPermissionContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -21,18 +29,22 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.managers.channel.attribute.IPermissionContainerManager;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.requests.restaction.PermissionOverrideAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
+import net.dv8tion.jda.internal.utils.PermissionUtil;
 
-public class DiscordContext<E> extends CommandContext<E> {
+public class DiscordContext<E> extends CommandContext<E> implements IPermissionContainer {
 
 	private EmbedBuilder embedBuilder = new EmbedBuilder();
 	
 	public DiscordContext(E e) {
 		super(e);
-		if(e instanceof MessageReceivedEvent || e instanceof Interaction || e instanceof GuildReadyEvent || e instanceof User || e instanceof InteractionHook) {
+		if(e instanceof MessageReceivedEvent || e instanceof Interaction || e instanceof GuildReadyEvent || e instanceof User || e instanceof Member || e instanceof InteractionHook) {
 			//NO-OP
 		}
 		else {
@@ -40,15 +52,31 @@ public class DiscordContext<E> extends CommandContext<E> {
 		}
 	}
 	
-	public User getAuthor() {
+	public Member getMember() {
+		if(event instanceof Interaction) {
+			return ((Interaction) event).getMember();
+		}
+		if(event instanceof Member) {
+			return (Member) event;
+		}
+		if(event instanceof MessageReceivedEvent) {
+			return ((MessageReceivedEvent) event).getMember();
+		}
+		if(event instanceof InteractionHook) {
+			return ((InteractionHook) event).getInteraction().getMember();
+		}
+		return null;
+	}
+	
+	public User getUser() {
 		if(event instanceof Interaction) {
 			return ((Interaction) event).getUser();
 		}
-		if(event instanceof MessageReceivedEvent) {
-			return ((MessageReceivedEvent) event).getAuthor();
-		}
 		if(event instanceof User) {
 			return (User) event;
+		}
+		if(event instanceof MessageReceivedEvent) {
+			return ((MessageReceivedEvent) event).getAuthor();
 		}
 		if(event instanceof InteractionHook) {
 			return ((InteractionHook) event).getInteraction().getUser();
@@ -67,7 +95,7 @@ public class DiscordContext<E> extends CommandContext<E> {
 	}
 	
 	/**
-	 * Checks if the user has all specified permissions in the current discord server
+	 * Checks if the user has all specified permissions in the current discord server (and channel)
 	 * 
 	 * if the context is the console user, returns true
 	 * 
@@ -76,16 +104,33 @@ public class DiscordContext<E> extends CommandContext<E> {
 	 * @param permissions the permissions to check
 	 */
 	public boolean hasPermission(Permission... permissions) {
-		User user = getAuthor();
-		Guild guild = getServer();
-		if(user instanceof ConsoleUser) {
-			return true;
-		}
-		if(user == null || guild == null) {
+		Member member = getMember();
+		
+		if(member == null) {
 			return false;
 		}
 		
-		return guild.getMember(user).hasPermission(permissions);
+		return PermissionUtil.checkPermission(member, permissions);
+		
+	}
+	
+	/**
+	 * Checks if the user has all specified permissions in the current discord server (and channel)
+	 * 
+	 * if the context is the console user, returns true
+	 * 
+	 * if the context is otherwise null for some reason does not contain a server, returns false
+	 * 
+	 * @param permissions the permissions to check
+	 */
+	public boolean hasPermission(IPermissionContainer channel, Permission... permissions) {
+		Member member = getMember();
+		
+		if(member == null) {
+			return false;
+		}
+		
+		return PermissionUtil.checkPermission(channel, member, permissions);
 		
 	}
 	
@@ -260,7 +305,7 @@ public class DiscordContext<E> extends CommandContext<E> {
 	}
 	
 	public EmbedBuilder constructEmbedResponse(String command, String title) {
-		User user = getAuthor();
+		User user = getUser();
 		embedBuilder = new EmbedBuilder();
 		embedBuilder.setAuthor(user.getAsTag(), null, user.getAvatarUrl());
 		embedBuilder.setTimestamp(Instant.now());
@@ -280,13 +325,23 @@ public class DiscordContext<E> extends CommandContext<E> {
 		return null;
 	}
 	
+	public GuildChannel getGuildChannel() {
+		return (GuildChannel) getChannel();
+	}
+	
 	public String getEffectiveName() {
-		return getEffectiveNameOf(getAuthor());
+		if(getMember() != null) {
+			return getMember().getEffectiveName();
+		}
+		return getUser().getName();
 	}
 	
 	public String getEffectiveNameOf(User user) {
 		if(isGuildContext()) {
-			return getServer().getMember(user).getEffectiveName();
+			Member member = getServer().getMember(user);
+			if(member != null) {
+				return member.getEffectiveName();
+			}
 		}
 		return user.getName();
 	}
@@ -328,11 +383,11 @@ public class DiscordContext<E> extends CommandContext<E> {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public DiscordContext getPrivateContext() {
-		if(getAuthor() == null || !getAuthor().hasPrivateChannel()) {
+		if(getUser() == null || !getUser().hasPrivateChannel()) {
 			return this;
 		}
 		try {
-			return new DiscordContext(getAuthor());
+			return new DiscordContext(getUser());
 		}
 		catch(UnsupportedOperationException e) {
 			return this; //just in case
@@ -348,6 +403,78 @@ public class DiscordContext<E> extends CommandContext<E> {
 			s = s.substring(0, 2000);
 		}
 		return s;
+	}
+
+	@Override
+	public Guild getGuild() {
+		return getServer();
+	}
+
+	@Override
+	public AuditableRestAction<Void> delete() {
+		return (AuditableRestAction<Void>) getChannel().delete();
+	}
+
+	@Override
+	public IPermissionContainer getPermissionContainer() {
+		return this;
+	}
+
+	@Override
+	public String getName() {
+		return getChannel().getName();
+	}
+
+	@Override
+	public ChannelType getType() {
+		return getChannel().getType();
+	}
+
+	@Override
+	public JDA getJDA() {
+		if(event instanceof GenericEvent) {
+			return ((GenericEvent) event).getJDA();
+		}
+		if(event instanceof Interaction) {
+			return ((Interaction) event).getJDA();
+		}
+		if(event instanceof User) {
+			return ((User) event).getJDA();
+		}
+		if(event instanceof InteractionHook) {
+			return ((InteractionHook) event).getJDA();
+		}
+		return null;
+	}
+
+	@Override
+	public long getIdLong() {
+		return ((ISnowflake) event).getIdLong();
+	}
+
+	@Override
+	public int compareTo(GuildChannel o) {
+		return getGuildChannel().compareTo(o);
+	}
+
+	@Override
+	public IPermissionContainerManager<?, ?> getManager() {
+		return getGuildChannel().getPermissionContainer().getManager();
+	}
+
+	@Override
+	public PermissionOverride getPermissionOverride(IPermissionHolder permissionHolder) {
+		return getGuildChannel().getPermissionContainer().getPermissionOverride(permissionHolder);
+	}
+
+	@Override
+	public List<PermissionOverride> getPermissionOverrides() {
+		return getGuildChannel().getPermissionContainer().getPermissionOverrides();
+	}
+
+	@Override
+	public PermissionOverrideAction upsertPermissionOverride(IPermissionHolder permissionHolder) {
+		return getGuildChannel().getPermissionContainer().upsertPermissionOverride(permissionHolder);
 	}
 
 }

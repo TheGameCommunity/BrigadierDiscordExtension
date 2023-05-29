@@ -44,6 +44,12 @@ public class BetterRequiredArgumentBuilder<S, T> extends BetterArgumentBuilder<S
 	}
 	
 	@Override
+    public BetterRequiredArgumentBuilder<S, T> suggests(final SuggestionProvider<S> provider) {
+        this.suggestionsProvider = provider;
+        return getThis();
+    }
+	
+	@Override
 	protected BetterRequiredArgumentBuilder<S, T> getThis() {
 		return this;
 	}
