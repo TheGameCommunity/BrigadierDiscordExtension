@@ -77,7 +77,6 @@ public class DiscordUserArgumentType implements ArgumentType<User>{
 			searchThread.join(1500);
 		} catch (InterruptedException e) {}
 		
-		System.out.println("Suggestions: ");
 		for(Suggestion suggestion : builder.build().getList()) {
 			System.out.println(suggestion.getText());
 		}
