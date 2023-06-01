@@ -295,7 +295,7 @@ public class DiscordContext<E> extends CommandContext<E> implements IPermissionC
 	public void sendThrowable(Throwable t) {
 		IReplyCallback callback = (IReplyCallback) event;
 		if(!callback.isAcknowledged()) {
-			callback.deferReply().queue();
+			callback.deferReply().setEphemeral(true).queue();
 		}
 		callback.getHook().editOriginal(t.toString()).queue();
 	}
