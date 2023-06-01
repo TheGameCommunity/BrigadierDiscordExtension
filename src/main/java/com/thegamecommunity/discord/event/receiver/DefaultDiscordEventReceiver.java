@@ -9,7 +9,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
-import com.thegamecommunity.brigadier.command.tree.BaseNode;
 import com.thegamecommunity.discord.command.DiscordContext;
 import com.thegamecommunity.discord.command.DiscordDispatcher;
 
@@ -20,6 +19,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -27,14 +27,14 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 
 public class DefaultDiscordEventReceiver extends ListenerAdapter {
-
-	private static final boolean debug = true;
 	
 	private final Sub sub = new Sub();
 	private final DiscordDispatcher<DiscordContext> dispatcher;
+	private final boolean development;
 	
-	public DefaultDiscordEventReceiver(DiscordDispatcher dispatcher) {
+	public DefaultDiscordEventReceiver(DiscordDispatcher dispatcher, boolean development) {
 		this.dispatcher = dispatcher;
+		this.development = development;
 	}
 	
 	@Override
@@ -112,10 +112,8 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 		public void onGuildReady(GuildReadyEvent e) { //for development
 			List<CommandData> commands = new ArrayList<>();
 			dispatcher.getRoot().getChildren().forEach((command) -> {
-				if(!debug) {
-					if(command instanceof BaseNode) {
-						return; //Don't register global commands as guild commands if we're not in a dev environment
-					}
+				if(!development) {
+					return; //Don't register commands as guild commands if we're not in a dev environment
 				}
 				SlashCommandData data = net.dv8tion.jda.api.interactions.commands.build.Commands.slash(command.getName(), command.getUsageText());
 				
@@ -140,6 +138,38 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 			});
 			
 			e.getGuild().updateCommands().addCommands(commands).queue();
+		}
+		
+		@Override
+		public void onReady(ReadyEvent e) {
+			List<CommandData> commands = new ArrayList<>();
+			dispatcher.getRoot().getChildren().forEach((command) -> {
+				if(development) {
+					return; //Don't register commands as global commands if we're in a dev environment
+				}
+				SlashCommandData data = net.dv8tion.jda.api.interactions.commands.build.Commands.slash(command.getName(), command.getUsageText());
+				
+				Command<DiscordContext> base = (Command<DiscordContext>) command.getCommand();
+				
+				if(command.getChildren().size() > 0) {
+					if(command.getChildren().size() == 1) {
+						data.addOption(OptionType.STRING, "arguments", "arguments", base == null, true); //todo: regular discord args?
+					}
+					else {
+						data.addOption(OptionType.STRING, "arguments", "arguments", base == null, true);
+					}
+					
+					/*
+					for(CommandNode node : command.getChildren()) {
+						System.out.println(node);
+					}
+					*/
+				}
+				
+				commands.add(data);
+			});
+			
+			e.getJDA().updateCommands().addCommands(commands).queue();
 		}
 		
 		@Override

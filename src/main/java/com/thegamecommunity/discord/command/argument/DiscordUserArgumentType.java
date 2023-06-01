@@ -7,9 +7,9 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+
 import com.thegamecommunity.brigadier.command.CommandUtils;
 import com.thegamecommunity.brigadier.command.argument.suggestion.DiscordUserSuggestion;
 import com.thegamecommunity.brigadier.command.argument.suggestion.builder.ExtendedSuggestionsBuilder;
