@@ -9,6 +9,8 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.tree.CommandNode;
+import com.thegamecommunity.brigadier.command.tree.DescriptiveNode;
 import com.thegamecommunity.discord.command.DiscordContext;
 import com.thegamecommunity.discord.command.DiscordDispatcher;
 
@@ -115,7 +117,8 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 				if(!development) {
 					return; //Don't register commands as guild commands if we're not in a dev environment
 				}
-				SlashCommandData data = net.dv8tion.jda.api.interactions.commands.build.Commands.slash(command.getName(), command.getUsageText());
+				
+				SlashCommandData data = getSlashCommandData(command);
 				
 				Command<DiscordContext> base = (Command<DiscordContext>) command.getCommand();
 				
@@ -147,7 +150,8 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 				if(development) {
 					return; //Don't register commands as global commands if we're in a dev environment
 				}
-				SlashCommandData data = net.dv8tion.jda.api.interactions.commands.build.Commands.slash(command.getName(), command.getUsageText());
+				
+				SlashCommandData data = getSlashCommandData(command);
 				
 				Command<DiscordContext> base = (Command<DiscordContext>) command.getCommand();
 				
@@ -212,6 +216,21 @@ public class DefaultDiscordEventReceiver extends ListenerAdapter {
 				e.replyChoiceStrings(returnedSuggestions).queue();
 			});
 		}
+	}
+	
+	protected SlashCommandData getSlashCommandData(CommandNode<DiscordContext> node) {
+		SlashCommandData data;
+		String description = null;
+		if(node instanceof DescriptiveNode) {
+			description = ((DescriptiveNode) node).getDescription();
+		}
+
+		if(description == null) {
+			description = node.getUsageText();	
+		}
+		
+		data = net.dv8tion.jda.api.interactions.commands.build.Commands.slash(node.getName(), description);
+		return data;
 	}
 	
 }
