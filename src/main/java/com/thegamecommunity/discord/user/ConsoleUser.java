@@ -97,5 +97,10 @@ public class ConsoleUser implements User {
 	public int getFlagsRaw() {
 		return 0;
 	}
+
+	@Override
+	public String getGlobalName() {
+		return "CONSOLE";
+	}
 	
 }
