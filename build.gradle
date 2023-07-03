@@ -26,8 +26,8 @@ archivesBaseName = "discordBrigadierExtension"
 dependencies {
    api group: 'com.thegamecommunity', name:'brigadier', version: 'TGC-1.3.3.0'
    shadow group: 'com.thegamecommunity', name:'brigadier', version: 'TGC-1.3.3.0'
-   shadow ('net.dv8tion:JDA:5.0.0-beta.10')
-   api ('net.dv8tion:JDA:5.0.0-beta.10')
+   shadow ('net.dv8tion:JDA:5.0.0-beta.12')
+   api ('net.dv8tion:JDA:5.0.0-beta.12')
 }
 
 shadowJar {
